@@ -19,7 +19,7 @@ class Listener:
     def __exit__(self, exc_type, exc, tb):
         self.stop()
 
-        return self
+        return False
 
     def start(self):
         self.serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

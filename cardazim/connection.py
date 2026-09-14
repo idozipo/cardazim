@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import socket
+import struct
 
 class Connection:
     def __init__(self, connection: socket.socket) -> None:
@@ -15,7 +16,7 @@ class Connection:
     def __exit__(self, exc_type, exc, tb):
         self.close() # Close the connection
 
-        return True
+        return False
 
     @classmethod
     def connect(cls, host: str, port: int) -> Connection:
@@ -25,21 +26,23 @@ class Connection:
 
     def send_message(self, message: bytes):
         """ Sends a message through the connection. """
-        self.sock.send(message)
+        self.sock.send(self._encode_message(message))
+
+    def _encode_message(self, message: bytes) -> bytes:
+        """
+        Encodes data in expected format.
+        """
+        return struct.pack(f'<I{len(message)}s', len(message), message)
 
     def recieve_message(self) -> bytes:
         """ 
         Recieves the message from the connection.
         """
 
-        msg = b''
-        while True:
-            data = self.sock.recv(4096) # Recieve 4kb at a time.
-            if not data:
-                break # No more data.
-
-            msg += data
-
+        message_length = int.from_bytes(self.sock.recv(4), byteorder='little') # Get the message length (first four bytes)
+    
+        msg = self.sock.recv(message_length) # Recieve the data
+    
         return msg
 
     def close(self):
