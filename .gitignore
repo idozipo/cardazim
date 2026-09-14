@@ -1,0 +1,19 @@
+# VSCode
+.vscode
+
+# PyCharm
+.idea
+
+# Mypy
+.mypy_cache
+
+# VEnv
+.env
+.venv
+
+# Python
+__pycache__
+
+# Eggs
+*.egg-info
+.eggs
