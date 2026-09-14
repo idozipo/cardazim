@@ -4,21 +4,22 @@ import sys
 import threading as t
 
 from listener import Listener
+from connection import Connection
 
-def handle_connection(listener: Listener):
+def handle_connection(conn: Connection):
     """
-    Prints the client data and then closes the connection.
+    Prints a single clients data and then closes the connection.
     """
-    with listener.accept() as conn:
-        msg = conn.recieve_message() # Gets the message
+    with conn:
+        msg = conn.receive_message() # Gets the message
         print(f"Recieved data: {msg.decode()}")
 
-def create_connection_handler(listener: Listener):
+def create_connection_handler(conn: Connection):
     """
-    Creates a thread which handles the connection.
+    Creates a thread which handles a single connection.
     """
 
-    thread = t.Thread(target=handle_connection, args=(listener,))
+    thread = t.Thread(target=handle_connection, args=(conn,), daemon=True)
     thread.start()
 
 def run_server(ip: str, port: int):
@@ -28,7 +29,9 @@ def run_server(ip: str, port: int):
 
     with Listener(ip, port) as listener:
         while True:
-            create_connection_handler(listener)
+            conn = listener.accept() # Accept a connection
+
+            create_connection_handler(conn) # Handle the connection
 
 def get_args():
     parser = argparse.ArgumentParser(description='Listens for data from client.')

@@ -34,7 +34,7 @@ class Connection:
         """
         return struct.pack(f'<I{len(message)}s', len(message), message)
 
-    def recieve_message(self) -> bytes:
+    def receive_message(self) -> bytes:
         """ 
         Recieves the message from the connection.
         """
