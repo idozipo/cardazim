@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 from os import PathLike
+import struct
 from typing import Union
 
 from PIL import Image
 from Crypto.Cipher import AES
 
 NONCE = b'arazim'
+IMAGE_MODE = 'RGB'
 
 class CryptImage:
     def __init__(self, image: Image.Image, key_hash: bytes | None):
@@ -20,6 +22,8 @@ class CryptImage:
 
         return cls(image, None)
 
+    # TODO: code repetition
+    # TODO: multiple encryption/decryption?
     def encrypt(self, key: str):
         encryption_key = self._hash_key(key.encode())
 
@@ -31,14 +35,13 @@ class CryptImage:
 
         # Plain image metadata
         plain_image = self.image.tobytes()
-        plain_image_mode = self.image.mode
         plain_image_size = self.image.size
 
         # Encrypt image
         cipher_image = cipher.encrypt(plain_image)
 
         # Recreate image with encrypted data and the original image metadata
-        self.image = Image.frombytes(plain_image_mode, plain_image_size, cipher_image)
+        self.image = Image.frombytes(IMAGE_MODE, plain_image_size, cipher_image)
 
     def decrypt(self, key: str) -> bool:
         encryption_key = self._hash_key(key.encode())
@@ -53,17 +56,23 @@ class CryptImage:
 
         # Cipher image metadata
         cipher_image = self.image.tobytes()
-        cipher_image_mode = self.image.mode
         cipher_image_size = self.image.size
 
         # Decrypt image
         plain_image = cipher.decrypt(cipher_image)
 
         # Recreate image with encrypted data and the original image metadata
-        self.image = Image.frombytes(cipher_image_mode, cipher_image_size, plain_image)
+        self.image = Image.frombytes(IMAGE_MODE, cipher_image_size, plain_image)
 
         return True
 
     @staticmethod
     def _hash_key(key: bytes) -> bytes:
         return hashlib.sha256(key).digest()
+
+    def serialize(self) -> bytes:
+        return (
+            struct.pack("II", self.image.size[1], self.image.size[0]) + \
+            self.image.tobytes() + \
+            self.key_hash if self.key_hash else b''
+        )
