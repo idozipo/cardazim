@@ -4,7 +4,7 @@ import socket
 import struct
 
 class Connection:
-    def __init__(self, connection: socket.socket) -> None:
+    def __init__(self, connection: socket.socket):
         self.sock = connection
 
     def __repr__(self) -> str:
