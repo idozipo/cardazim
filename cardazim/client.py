@@ -3,16 +3,11 @@ import sys
 import socket
 import struct
 
+from connection import Connection
 
 ###########################################################
 ####################### YOUR CODE #########################
 ###########################################################
-
-def encode_data(data: str) -> bytes:
-    """
-    Encodes data in expected format.
-    """
-    return struct.pack(f'<I{len(data)}s', len(data), data.encode())
 
 def send_data(server_ip: str, server_port: int, data: str):
     '''
@@ -20,14 +15,12 @@ def send_data(server_ip: str, server_port: int, data: str):
     '''
     print("Sending message...")
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # Create socket
-    sock.connect((server_ip, server_port)) # Create connection
-    sock.send(encode_data(data)) # Send data
+    with Connection.connect(server_ip, server_port) as connection: # Create connection
+        connection.send_message(data.encode()) # Send data
     
 ###########################################################
 ##################### END OF YOUR CODE ####################
 ###########################################################
-
 
 def get_args():
     parser = argparse.ArgumentParser(description='Send data to server.')
