@@ -1,0 +1,17 @@
+asttokens==3.0.2
+colorama==0.4.6
+executing==2.2.1
+ipython==9.17.1
+ipython_pygments_lexers==1.1.1
+jedi==0.20.0
+matplotlib-inline==0.2.2
+parso==0.8.7
+pillow==12.3.0
+prompt_toolkit==3.0.53
+psutil==7.2.2
+pure_eval==0.2.4
+pycryptodome==3.23.0
+Pygments==2.21.0
+stack-data==0.6.3
+traitlets==5.16.1
+wcwidth==0.8.3

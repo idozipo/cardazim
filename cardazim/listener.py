@@ -3,7 +3,7 @@ import socket
 from connection import Connection
 
 class Listener:
-    def __init__(self, host: str, port: int, backlog: int = 1000) -> None:
+    def __init__(self, host: str, port: int, backlog: int = 1000):
         self.host = host
         self.port = port
         self.backlog = backlog
