@@ -71,6 +71,7 @@ class CryptImage:
         return hashlib.sha256(key).digest()
 
     def serialize(self) -> bytes:
+        """ Serializes the image into a byte format (including metadata) """
         return (
             struct.pack("II", self.image.size[1], self.image.size[0]) + \
             self.image.tobytes() + \
