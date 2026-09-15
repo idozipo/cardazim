@@ -1,6 +1,7 @@
 import argparse
 import socket
 import sys
+import threading as t
 
 def get_message(conn: socket.socket) -> str:
     """
@@ -13,6 +14,24 @@ def get_message(conn: socket.socket) -> str:
     msg = data.decode() # Decode the message
 
     return msg
+
+def handle_connection(conn: socket.socket):
+    """
+    Prints the client data and then closes the connection.
+    """
+    
+    msg = get_message(conn) # Gets the message
+    print(f"Recieved data: {msg}")
+
+    conn.close() # Close the connection
+
+def create_handler(conn: socket.socket):
+    """
+    Creates a thread which handles the connection.
+    """
+
+    thread = t.Thread(target=handle_connection, args=(conn,))
+    thread.start()
 
 def run_server(ip: str, port: int):
     """
@@ -27,10 +46,7 @@ def run_server(ip: str, port: int):
     while True:
         conn, _ = serv.accept() # Accept a connection
 
-        msg = get_message(conn) # Gets the message
-        print(f"Recieved data: {msg}")
-
-        conn.close() # Close the connection
+        create_handler(conn)
 
 def get_args():
     parser = argparse.ArgumentParser(description='Listens for data from client.')
