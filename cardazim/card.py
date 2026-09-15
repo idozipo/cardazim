@@ -1,7 +1,8 @@
-from os import PathLike
 import struct
+from os import PathLike
 from typing import Union
 
+import util
 from crypt_image import CryptImage
 
 class Card:
@@ -33,6 +34,10 @@ class Card:
         riddle: str, 
         solution: str
     ):
+        """
+        Creates a card from an image represented by its filepath.
+        """
+
         image = CryptImage.create_from_path(path)
 
         return cls(
@@ -43,5 +48,12 @@ class Card:
             solution
         )
 
-    # def serialize(self) -> bytes:
-    #     len(self.name).to_bytes() + self.name.encode() + len(se)
+    def serialize(self) -> bytes:
+        """ Serializes the card into a byte format. """
+
+        return (
+            util.encode_string(self.name) + \
+            util.encode_string(self.creator) + \
+            self.image.serialize() + \
+            util.encode_string(self.riddle)
+        )
