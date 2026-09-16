@@ -80,3 +80,9 @@ class Card:
             riddle,
             None # No solution in serialization
         )
+
+    def encrypt(self):
+        """ Helper function to encrypt the image. """
+
+        if self.solution is not None:
+            self.image.encrypt(self.solution)
