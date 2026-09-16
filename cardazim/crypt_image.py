@@ -8,7 +8,7 @@ from typing import Union
 from PIL import Image
 from Crypto.Cipher import AES
 
-from . import util
+from cardazim import util
 
 
 IMAGE_SIZE_FORMAT_STR = "<II" # image_width, image_height

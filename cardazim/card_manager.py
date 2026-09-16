@@ -4,8 +4,7 @@ import hashlib
 import pathlib
 import json
 
-from .card import Card
-from .crypt_image import CryptImage
+from cardazim.card import Card
 
 IMAGE_FILENAME = "image.jpg"
 METADATA_FILENAME = "metadata.json"
@@ -20,22 +19,26 @@ def _metadata_path(dir_path: pathlib.Path):
     return dir_path / METADATA_FILENAME
 
 class CardManager:
+    def __init__(self, dir_path: Union[str, PathLike] = '.') -> None:
+        self.dir_path = dir_path
+
     def generate_identifier(self, card: Card) -> str:
             """ Generates a hash identifier for the card. """
     
-            raw_identifier = 'n' + card.name + 'c' + card.creator
-            return hashlib.sha256(raw_identifier.encode()).digest().decode()
+            return 'n{' + card.name + '}c{' + card.creator + '}'
     
-    def save(self, card: Card, dir_path: Union[str, PathLike] = '.'):
+    def save(self, card: Card):
         """ Save the card to a directory. """
         solution_dir = UNSOLVED_DIR if card.solution is None else SOLVED_DIR
 
-        directory = pathlib.Path(dir_path) / solution_dir / self.generate_identifier(card) # Full directory path
+        directory = pathlib.Path(self.dir_path) / solution_dir / self.generate_identifier(card) # Full directory path
 
         directory.mkdir(parents=True, exist_ok=True) # Create the directory
 
         self._save_image(card, directory)
         self._save_metadata(card, directory)
+
+        print(f"Saved card to path '{directory}'")
 
     def _save_metadata(self, card: Card, dir_path: pathlib.Path):
         """ Saves the metadata of the card to card directory. """
@@ -45,30 +48,30 @@ class CardManager:
                 "creator": card.creator,
                 "riddle": card.riddle,
                 "solution": card.solution,
-                "image_path": _image_path(dir_path)
+                "image_path": _image_path(dir_path).__str__()
             }
 
             json.dump(contents, m_file)
 
     def _save_image(self, card: Card, dir_path: pathlib.Path):
         """ Saves the card image to the card directory. """
-        card.image.image.save(_image_path(dir_path))
+        card.image.image.convert('RGB').save(_image_path(dir_path))
 
-    def load(self, identifier: str, dir_path: Union[str, PathLike] = '.') -> Card:
+    def load(self, identifier: str) -> Card:
         """ Loads a card from the save file. """
-        full_path = self._get_card_dir(identifier, dir_path) # Get sanitized path
+        full_path = self._get_card_dir(identifier) # Get sanitized path
 
         name, creator, riddle, solution, image_path = self._load_meta_data(full_path)
 
         return Card.create_from_path(name, creator, image_path, riddle, solution)
 
-    def _get_card_dir(self, identifier: str, dir_path: Union[str, PathLike] = '.') -> pathlib.Path:
+    def _get_card_dir(self, identifier: str) -> pathlib.Path:
         """ Sanitizes the dir_path to check if such an identifier even exists. """
         solution_dirs = [SOLVED_DIR, UNSOLVED_DIR]
 
         # Check in both solved and unsolved dirs
         for directory in solution_dirs:
-            full_path = pathlib.Path(dir_path) / directory / identifier
+            full_path = pathlib.Path(self.dir_path) / directory / identifier
 
             if full_path.exists():
                 return full_path

@@ -3,8 +3,8 @@ from __future__ import annotations
 from os import PathLike
 from typing import Union
 
-from . import util
-from .crypt_image import CryptImage
+from cardazim import util
+from cardazim.crypt_image import CryptImage
 
 class Card:
     def __init__(self, name: str, creator: str, image: CryptImage, riddle: str, solution: str | None) -> None:
