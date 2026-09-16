@@ -11,7 +11,7 @@ from Crypto.Cipher import AES
 import cardazim.util as util
 
 
-IMAGE_FORMAT_STR = "<III" # image_width, image_height, image_mode
+IMAGE_SIZE_FORMAT_STR = "<II" # image_width, image_height
 
 IMAGE_MODE_BYTES_PER_PIXEL: dict[str, int] = {
     '1': 1,
@@ -42,6 +42,32 @@ def _get_image_mode(raw_mode: str):
 
     return raw_mode, IMAGE_MODE_BYTES_PER_PIXEL[raw_mode]
 
+def _cipher_AES_on_image(image: Image.Image, key: bytes, should_encrypt: bool) -> Image.Image:
+    """ 
+    Helper to remove code duplication.
+
+    Args:
+        `data` - data to encrypt/decrypt
+        `key` - key for AES cipher
+        `should_encrypt` - if this key is true then encrypts else decrypts.
+    Returns:
+        Activation of the cipher on the data argument.
+    """
+
+    # Create cipher
+    cipher = AES.new(key, AES.MODE_EAX, nonce=NONCE)
+
+    # Plain image metadata
+    original_image_bytes = image.tobytes()
+    original_image_size = image.size
+    original_image_mode = image.mode
+
+    # Encrypt image
+    cipher_image = cipher.encrypt(original_image_bytes)
+
+    # Recreate image with encrypted data and the original image metadata
+    return Image.frombytes(original_image_mode, original_image_size, cipher_image)
+
 
 class CryptImage:
     def __init__(self, image: Image.Image, key_hash: bytes | None):
@@ -54,17 +80,15 @@ class CryptImage:
 
         return cls(image, None)
 
-    # TODO: code repetition
-    # TODO: multiple encryption/decryption?
     def encrypt(self, key: str):
         """
         Encrypts the image in place.
         Also, updates internal hashing values.
         """
 
-        # # Don't allow encrypting an image more than once
-        # if self._encrypted_image_bytes is not None: 
-        #     return
+        # Don't allow encrypting an image more than once
+        if self.key_hash is not None: 
+            return
 
         # Calculate the key for encryption
         encryption_key = _hash_key(key.encode())
@@ -72,21 +96,19 @@ class CryptImage:
         # Update internal hash
         self.key_hash = _hash_key(encryption_key)
 
-        # Create cipher
-        cipher = AES.new(encryption_key, AES.MODE_EAX, nonce=NONCE)
-
-        # Plain image metadata
-        plain_image = self.image.tobytes()
-        plain_image_size = self.image.size
-        plain_image_mode = self.image.mode
-
-        # Encrypt image
-        cipher_image = cipher.encrypt(plain_image)
-
-        # Recreate image with encrypted data and the original image metadata
-        self.image = Image.frombytes(plain_image_mode, plain_image_size, cipher_image)
+        self.image = _cipher_AES_on_image(self.image, encryption_key, True)
 
     def decrypt(self, key: str) -> bool:
+        """
+        Decrypts the image in place.
+        Also, updates internal hashing values.
+        """
+
+        # Don't allow decrypting an image more than once
+        if self.key_hash is None: 
+            return True # Already decrypted so success
+
+        # Calculate the key for decryption
         encryption_key = _hash_key(key.encode())
 
         if _hash_key(encryption_key) != self.key_hash: # Check if key is correct
@@ -94,22 +116,9 @@ class CryptImage:
 
         self.key_hash = None # To signify that the image is decrypted
         
-        # Create cipher
-        cipher = AES.new(encryption_key, AES.MODE_EAX, nonce=NONCE)
-
-        # Cipher image metadata
-        cipher_image = self.image.tobytes()
-        cipher_image_size = self.image.size
-        cipher_image_mode = self.image.mode
-
-        # Decrypt image
-        plain_image = cipher.decrypt(cipher_image)
-
-        # Recreate image with encrypted data and the original image metadata
-        self.image = Image.frombytes(cipher_image_mode, cipher_image_size, plain_image)
+        self.image = _cipher_AES_on_image(self.image, encryption_key, False)
 
         return True
-
 
     def serialize(self) -> bytes:
         """ 
@@ -125,7 +134,7 @@ class CryptImage:
 
         return (
             struct.pack(
-                IMAGE_FORMAT_STR, 
+                IMAGE_SIZE_FORMAT_STR, 
                 self.image.size[0], 
                 self.image.size[1], 
             ) + \
@@ -141,8 +150,8 @@ class CryptImage:
         """
 
         # Extract the image metadata
-        width, height, mode_length = struct.unpack_from(IMAGE_FORMAT_STR, data, offset)
-        offset += struct.calcsize(IMAGE_FORMAT_STR)
+        width, height= struct.unpack_from(IMAGE_SIZE_FORMAT_STR, data, offset)
+        offset += struct.calcsize(IMAGE_SIZE_FORMAT_STR)
 
         # Decode the image mode
         raw_mode, offset = util.decode_string(data, offset)
