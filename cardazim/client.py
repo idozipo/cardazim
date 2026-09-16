@@ -4,8 +4,8 @@ import pathlib
 
 import filetype
 
-from connection import Connection
-from card import Card
+from .connection import Connection
+from .card import Card
 
 ###########################################################
 ####################### YOUR CODE #########################

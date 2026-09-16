@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import socket
-import struct
 
 class Connection:
     def __init__(self, connection: socket.socket):

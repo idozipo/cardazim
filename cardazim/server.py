@@ -2,9 +2,9 @@ import argparse
 import sys
 import threading as t
 
-from listener import Listener
-from connection import Connection
-from card import Card
+from .listener import Listener
+from .connection import Connection
+from .card import Card
 
 def handle_connection(conn: Connection):
     """
