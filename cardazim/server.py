@@ -1,10 +1,10 @@
 import argparse
-import socket
 import sys
 import threading as t
 
 from listener import Listener
 from connection import Connection
+from card import Card
 
 def handle_connection(conn: Connection):
     """
@@ -12,7 +12,8 @@ def handle_connection(conn: Connection):
     """
     with conn:
         msg = conn.receive_message() # Gets the message
-        print(f"Recieved data: {msg.decode()}")
+        card = Card.deserialize(msg)
+        print(f"Recieved card '{card.name}' by {card.creator}")
 
 def create_connection_handler(conn: Connection):
     """
